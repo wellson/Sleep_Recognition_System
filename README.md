@@ -20,8 +20,8 @@
 
 Eu crie o  **Sleep Recognition System** para necessidade pessoal quando viajo de carro da sono. Solução completa de segurança viária que monitora continuamente o estado de atenção do motorista via webcam. Utilizando o modelo **MediaPipe Face Landmarker** (468 pontos faciais 3D), o sistema calcula métricas biométricas clínicas em cada frame e dispara alertas multimodais (visual + sonoro) antes que um acidente ocorra.
 
-<a href="https://www.youtube.com/watch?v=ID_DO_VIDEO" target="_blank">
-  <img src="https://img.youtube.com/vi/ID_DO_VIDEO/0.jpg" alt="Assista ao vídeo" width="700" height="600" style="object-fit: cover;" />
+<a href="https://www.youtube.com/watch?v=u56r2gjhIU0" target="_blank">
+  <img src="https://img.youtube.com/vi/u56r2gjhIU0/0.jpg" alt="Assista ao vídeo" width="700" height="600" style="object-fit: cover;" />
 </a>
 
 ```
