@@ -315,7 +315,7 @@ pygame.mixer disponível? ──SIM──▶ Pygame (multi-canal simultâneo)
 ### 1. Clonar e preparar ambiente
 
 ```bash
-git clone https://github.com/seu-usuario/Sleep_Recognition_System.git
+git clone https://github.com/wellson/Sleep_Recognition_System.git
 cd Sleep_Recognition_System
 
 python3 -m venv .venv
