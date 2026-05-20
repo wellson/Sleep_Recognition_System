@@ -24,7 +24,11 @@ Eu crie o  **Sleep Recognition System** para necessidade pessoal quando viajo de
   <img src="https://img.youtube.com/vi/u56r2gjhIU0/0.jpg" alt="Assista ao vídeo" width="700" height="600" style="object-fit: cover;" />
 </a>
 
-<video src="video.webm" width="700" height="600" style="object-fit: cover;" autoplay loop muted playsinline></video>
+<video src="https://github.com/wellson/Sleep_Recognition_System/blob/main/video.webm" width="700" height="600" style="object-fit: cover;" autoplay loop muted playsinline></video>
+
+<video width="700" height="600" controls>
+  <source src="https://github.com/wellson/Sleep_Recognition_System/raw/main/video.webm" type="video/webm">
+</video>
 
 
 ```
