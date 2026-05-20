@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Sono - Tempo Real</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-base: #0a0b0e;
+            --bg-panel: rgba(18, 20, 28, 0.6);
+            --bg-panel-solid: #12141c;
+            --border-glow: rgba(255, 255, 255, 0.05);
+            --accent-cyan: #00e5ff;
+            --accent-pink: #ff007f;
+            --accent-green: #39ff14;
+            --accent-orange: #ff9f00;
+            --accent-red: #ff3333;
+            --accent-purple: #bd00ff;
+            --text-main: #f5f6f9;
+            --text-muted: #8a8f9f;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(at 10% 20%, rgba(0, 229, 255, 0.05) 0px, transparent 50%),
+                radial-gradient(at 90% 80%, rgba(255, 0, 127, 0.05) 0px, transparent 50%);
+        }
+
+        header {
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-glow);
+            background: rgba(10, 11, 14, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        .header-title-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-dot {
+            width: 12px;
+            height: 12px;
+            background-color: var(--accent-cyan);
+            border-radius: 50%;
+            box-shadow: 0 0 15px var(--accent-cyan);
+            animation: pulse-cyan 2s infinite;
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, #fff, var(--text-muted));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: rgba(57, 255, 20, 0.1);
+            color: var(--accent-green);
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(57, 255, 20, 0.2);
+        }
+
+        .status-pulse {
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent-green);
+            border-radius: 50%;
+            animation: pulse-green 1.5s infinite;
+        }
+
+        .dashboard-container {
+            flex: 1;
+            padding: 30px 40px;
+            display: grid;
+            grid-template-columns: 1fr 1.3fr;
+            gap: 30px;
+            max-width: 1800px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-glow);
+            border-radius: 20px;
+            padding: 25px;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .right-column {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        /* Status Display */
+        .status-display {
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            min-height: 250px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .status-glow-bg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.15;
+            transition: all 0.5s ease;
+        }
+
+        .status-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+        }
+
+        .status-value {
+            font-size: 3.5rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin: 10px 0;
+            transition: color 0.3s ease;
+        }
+
+        .status-message {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            max-width: 80%;
+            line-height: 1.4;
+        }
+
+        /* Status Classes for Dynamic Changes */
+        .status-atento {
+            color: var(--accent-green);
+            text-shadow: 0 0 30px rgba(57, 255, 20, 0.3);
+        }
+        .status-fadiga {
+            color: var(--accent-orange);
+            text-shadow: 0 0 30px rgba(255, 159, 0, 0.3);
+            animation: pulse-orange-shadow 1.5s infinite alternate;
+        }
+        .status-distracao {
+            color: var(--accent-purple);
+            text-shadow: 0 0 35px rgba(189, 0, 255, 0.4);
+            animation: pulse-purple-shadow 1.2s infinite alternate;
+        }
+        .status-perigo {
+            color: var(--accent-red);
+            text-shadow: 0 0 40px rgba(255, 51, 51, 0.5);
+            animation: pulse-red-shadow 0.8s infinite alternate;
+        }
+
+        /* Stats Grid */
+        .stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-glow);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .stat-num {
+            font-size: 2.2rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .drowsy-count-color {
+            color: var(--accent-red);
+        }
+
+        .yawn-count-color {
+            color: var(--accent-cyan);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        /* Camera Details Card */
+        .camera-card {
+            padding: 15px 25px;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .camera-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .camera-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .camera-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .face-status-badge {
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 8px;
+            border: 1px solid;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .face-detected {
+            background: rgba(57, 255, 20, 0.1);
+            color: var(--accent-green);
+            border-color: rgba(57, 255, 20, 0.2);
+        }
+
+        .face-missing {
+            background: rgba(255, 51, 51, 0.1);
+            color: var(--accent-red);
+            border-color: rgba(255, 51, 51, 0.2);
+            animation: pulse-border-red 1s infinite alternate;
+        }
+
+        /* Gauges Section */
+        .gauges-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+
+        .gauge-card {
+            align-items: center;
+            padding: 20px;
+        }
+
+        .gauge-svg-container {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .gauge-circle-bg {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.03);
+            stroke-width: 8px;
+        }
+
+        .gauge-circle-fill {
+            fill: none;
+            stroke-width: 8px;
+            stroke-linecap: round;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+            transition: stroke-dashoffset 0.15s ease;
+        }
+
+        .gauge-val-text {
+            position: absolute;
+            font-size: 1.8rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .gauge-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        /* Chart Card */
+        .chart-card {
+            flex: 1;
+            min-height: 300px;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chart-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .chart-container {
+            position: relative;
+            flex: 1;
+            width: 100%;
+        }
+
+        /* Events Log Card */
+        .events-card {
+            grid-column: 1 / span 2;
+            max-height: 280px;
+        }
+
+        .events-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-glow);
+            padding-bottom: 15px;
+        }
+
+        .events-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .event-feed {
+            overflow-y: auto;
+            max-height: 180px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-right: 8px;
+        }
+
+        .event-feed::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .event-feed::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.01);
+            border-radius: 4px;
+        }
+
+        .event-feed::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .event-row {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr 1fr 1fr;
+            align-items: center;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--border-glow);
+            border-radius: 10px;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .event-row:hover {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .event-time {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+        }
+
+        .event-badge {
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            width: max-content;
+            border: 1px solid;
+        }
+
+        .event-drowsy {
+            background: rgba(255, 51, 51, 0.1);
+            color: var(--accent-red);
+            border-color: rgba(255, 51, 51, 0.2);
+        }
+
+        .event-yawn {
+            background: rgba(0, 229, 255, 0.1);
+            color: var(--accent-cyan);
+            border-color: rgba(0, 229, 255, 0.2);
+        }
+
+        .event-distraction {
+            background: rgba(189, 0, 255, 0.1);
+            color: var(--accent-purple);
+            border-color: rgba(189, 0, 255, 0.2);
+        }
+
+        .event-detail {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-main);
+        }
+
+        .no-events {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 20px;
+            font-size: 0.9rem;
+        }
+
+        /* Animations */
+        @keyframes pulse-cyan {
+            0% { transform: scale(1); box-shadow: 0 0 10px rgba(0, 229, 255, 0.4); }
+            50% { transform: scale(1.1); box-shadow: 0 0 25px rgba(0, 229, 255, 0.8); }
+            100% { transform: scale(1); box-shadow: 0 0 10px rgba(0, 229, 255, 0.4); }
+        }
+
+        @keyframes pulse-green {
+            0% { opacity: 0.4; }
+            50% { opacity: 1; }
+            100% { opacity: 0.4; }
+        }
+
+        @keyframes pulse-purple-shadow {
+            0% { box-shadow: 0 0 10px rgba(189, 0, 255, 0.2); }
+            100% { box-shadow: 0 0 30px rgba(189, 0, 255, 0.5); }
+        }
+
+        @keyframes pulse-orange-shadow {
+            0% { box-shadow: 0 0 10px rgba(255, 159, 0, 0.2); }
+            100% { box-shadow: 0 0 30px rgba(255, 159, 0, 0.5); }
+        }
+
+        @keyframes pulse-red-shadow {
+            0% { box-shadow: 0 0 10px rgba(255, 51, 51, 0.3); }
+            100% { box-shadow: 0 0 45px rgba(255, 51, 51, 0.7); }
+        }
+
+        @keyframes pulse-border-red {
+            0% { border-color: rgba(255, 51, 51, 0.2); }
+            100% { border-color: rgba(255, 51, 51, 0.6); }
+        }
+
+        /* Emergency Web alarm screen overlay */
+        .emergency-screen-blink {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
+            display: none;
+        }
+
+        .emergency-screen-blink-red {
+            background: rgba(255, 51, 51, 0.15);
+            animation: flash-overlay 0.6s infinite alternate;
+        }
+
+        .emergency-screen-blink-purple {
+            background: rgba(189, 0, 255, 0.15);
+            animation: flash-overlay 0.6s infinite alternate;
+        }
+
+        @keyframes flash-overlay {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        @media (max-width: 1100px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+            .events-card {
+                grid-column: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="emergency-screen-blink" id="emergencyOverlay"></div>
+
+    <header>
+        <div class="header-title-container">
+            <div class="logo-dot"></div>
+            <h1>Detecção de Sonolência & Fadiga</h1>
+        </div>
+        <div class="connection-status">
+            <div class="status-pulse"></div>
+            <span>SERVIDOR ATIVO</span>
+        </div>
+    </header>
+
+    <main class="dashboard-container">
+        <!-- Coluna da Esquerda (Status e Contadores) -->
+        <div class="left-column">
+            <!-- Card do Status Atual do Motorista -->
+            <div class="card status-display" id="statusCard">
+                <div class="status-glow-bg" id="statusGlow"></div>
+                <div class="status-label">Estado do Motorista</div>
+                <div class="status-value status-atento" id="statusText">ATENTO</div>
+                <div class="status-message" id="statusMessage">O motorista demonstra padrão facial estável e olhos abertos. Continue dirigindo com segurança.</div>
+            </div>
+
+            <!-- Cards de Estatísticas Acumuladas -->
+            <div class="stats-row">
+                <div class="stat-box">
+                    <div class="stat-num drowsy-count-color" id="drowsyCount">0</div>
+                    <div class="stat-label">Sonolências</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-num yawn-count-color" id="yawnCount">0</div>
+                    <div class="stat-label">Bocejos</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-num" id="distractedCount" style="color: var(--accent-purple);">0</div>
+                    <div class="stat-label">Distrações</div>
+                </div>
+            </div>
+
+            <!-- Card de Status do Rosto / Webcam -->
+            <div class="card camera-card">
+                <div class="camera-info">
+                    <span class="camera-title">Dispositivo de Captura</span>
+                    <span class="camera-sub">Webcam Local (Tempo Real)</span>
+                </div>
+                <div class="face-status-badge face-detected" id="faceBadge">
+                    <span class="status-pulse" style="background: currentColor;"></span>
+                    <span id="faceBadgeText">ROSTO DETECTADO</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coluna da Direita (Métricas e Gráfico) -->
+        <div class="right-column">
+            <!-- Gauges Ocular (EAR), Bucal (MAR) e Tracker de Pose -->
+            <div class="gauges-container">
+                <!-- Gauge EAR -->
+                <div class="card gauge-card">
+                    <div class="gauge-svg-container">
+                        <svg width="140" height="140">
+                            <circle class="gauge-circle-bg" cx="70" cy="70" r="58"></circle>
+                            <circle class="gauge-circle-fill" id="earCircle" cx="70" cy="70" r="58" stroke="var(--accent-cyan)"></circle>
+                        </svg>
+                        <div class="gauge-val-text" id="earVal">0.35</div>
+                    </div>
+                    <div class="gauge-label">EAR (Olhos)</div>
+                </div>
+
+                <!-- Gauge MAR -->
+                <div class="card gauge-card">
+                    <div class="gauge-svg-container">
+                        <svg width="140" height="140">
+                            <circle class="gauge-circle-bg" cx="70" cy="70" r="58"></circle>
+                            <circle class="gauge-circle-fill" id="marCircle" cx="70" cy="70" r="58" stroke="var(--accent-pink)"></circle>
+                        </svg>
+                        <div class="gauge-val-text" id="marVal">0.15</div>
+                    </div>
+                    <div class="gauge-label">MAR (Boca)</div>
+                </div>
+
+                <!-- Head Pose Target Tracker 2D -->
+                <div class="card gauge-card" id="poseCard">
+                    <div class="gauge-svg-container">
+                        <svg width="140" height="140" id="poseTrackerSvg">
+                            <circle class="gauge-circle-bg" cx="70" cy="70" r="58" style="stroke: rgba(255, 255, 255, 0.08);"></circle>
+                            <circle cx="70" cy="70" r="38" fill="none" stroke="rgba(255, 255, 255, 0.04)" stroke-dasharray="2 2" stroke-width="1"></circle>
+                            <line x1="12" y1="70" x2="128" y2="70" stroke="rgba(255, 255, 255, 0.06)" stroke-width="1"></line>
+                            <line x1="70" y1="12" x2="70" y2="128" stroke="rgba(255, 255, 255, 0.06)" stroke-width="1"></line>
+                            <circle id="poseDot" cx="70" cy="70" r="6" fill="var(--accent-green)" style="transition: fill 0.2s ease;"></circle>
+                        </svg>
+                        <div class="gauge-val-text" id="poseValText" style="font-size: 0.75rem; bottom: 8px; font-family: 'Outfit'; color: var(--text-muted);">0.00 / 0.00</div>
+                    </div>
+                    <div class="gauge-label">Tracker Pose (Y / P)</div>
+                </div>
+            </div>
+
+            <!-- Gráfico Linear de Tempo Real -->
+            <div class="card chart-card">
+                <div class="chart-header">
+                    <span class="chart-title">Timeline das Métricas (Real-Time)</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="realtimeChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Histórico e Logs de Fadiga -->
+        <div class="card events-card">
+            <div class="events-header">
+                <span class="events-title">Registro de Telemetria e Fadiga (Histórico)</span>
+            </div>
+            <div class="event-feed" id="eventFeed">
+                <div class="no-events">Nenhum evento registrado nesta sessão.</div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // DOM Elements
+        const statusCard = document.getElementById('statusCard');
+        const statusText = document.getElementById('statusText');
+        const statusMessage = document.getElementById('statusMessage');
+        const statusGlow = document.getElementById('statusGlow');
+        const drowsyCountEl = document.getElementById('drowsyCount');
+        const yawnCountEl = document.getElementById('yawnCount');
+        const distractedCountEl = document.getElementById('distractedCount');
+        const faceBadge = document.getElementById('faceBadge');
+        const faceBadgeText = document.getElementById('faceBadgeText');
+        const earValEl = document.getElementById('earVal');
+        const marValEl = document.getElementById('marVal');
+        const earCircle = document.getElementById('earCircle');
+        const marCircle = document.getElementById('marCircle');
+        const eventFeed = document.getElementById('eventFeed');
+        const emergencyOverlay = document.getElementById('emergencyOverlay');
+        const poseDot = document.getElementById('poseDot');
+        const poseValText = document.getElementById('poseValText');
+
+        // State trackers to reduce network fetch for events
+        let prevDrowsyCount = -1;
+        let prevYawnCount = -1;
+        let prevDistractedCount = -1;
+
+        // Initialize Chart.js
+        const ctx = document.getElementById('realtimeChart').getContext('2d');
+        const maxSamples = 40;
+        const chartLabels = Array(maxSamples).fill('');
+        const earData = Array(maxSamples).fill(0.35);
+        const marData = Array(maxSamples).fill(0.15);
+
+        // Chart definitions
+        const realtimeChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartLabels,
+                datasets: [
+                    {
+                        label: 'EAR (Olhos)',
+                        data: earData,
+                        borderColor: '#00e5ff',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.3,
+                        fill: false
+                    },
+                    {
+                        label: 'MAR (Boca)',
+                        data: marData,
+                        borderColor: '#ff007f',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.3,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: '#f5f6f9',
+                            font: { family: 'Outfit', size: 11 }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false }
+                    },
+                    y: {
+                        min: 0.0,
+                        max: 1.0,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.03)'
+                        },
+                        ticks: {
+                            color: '#8a8f9f',
+                            font: { family: 'JetBrains Mono', size: 10 }
+                        }
+                    }
+                },
+                animation: { duration: 0 } // Disabled for ultra-performance real-time drawing
+            }
+        });
+
+        // Add static horizontal threshold lines to Chart.js draw cycle
+        const originalDraw = realtimeChart.draw;
+        realtimeChart.draw = function() {
+            originalDraw.apply(this, arguments);
+            const ctx = this.ctx;
+            const yScale = this.scales.y;
+            const xScale = this.scales.x;
+
+            // DRAW EAR Threshold Line (0.22)
+            const earY = yScale.getPixelForValue(0.22);
+            ctx.save();
+            ctx.strokeStyle = 'rgba(255, 51, 51, 0.4)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(xScale.left, earY);
+            ctx.lineTo(xScale.right, earY);
+            ctx.stroke();
+            ctx.fillStyle = 'rgba(255, 51, 51, 0.6)';
+            ctx.font = '10px JetBrains Mono';
+            ctx.fillText('LIMIAR SONO (0.22)', xScale.left + 10, earY - 5);
+
+            // DRAW MAR Threshold Line (0.60)
+            const marY = yScale.getPixelForValue(0.60);
+            ctx.strokeStyle = 'rgba(255, 159, 0, 0.4)';
+            ctx.beginPath();
+            ctx.moveTo(xScale.left, marY);
+            ctx.lineTo(xScale.right, marY);
+            ctx.stroke();
+            ctx.fillStyle = 'rgba(255, 159, 0, 0.6)';
+            ctx.fillText('LIMIAR BOCEJO (0.60)', xScale.left + 10, marY - 5);
+            ctx.restore();
+        };
+
+        // Audio alert API using native Web AudioContext
+        let webAudioContext = null;
+        let audioOscillator = null;
+
+        function playWebBeep(freq = 880) {
+            try {
+                if (!webAudioContext) {
+                    webAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (webAudioContext.state === 'suspended') {
+                    webAudioContext.resume();
+                }
+                
+                // Continuous emergency alarm loop
+                if (audioOscillator) {
+                    audioOscillator.frequency.setValueAtTime(freq, webAudioContext.currentTime);
+                } else {
+                    audioOscillator = webAudioContext.createOscillator();
+                    const gainNode = webAudioContext.createGain();
+                    
+                    audioOscillator.type = 'sawtooth';
+                    audioOscillator.frequency.setValueAtTime(freq, webAudioContext.currentTime); // Pitch
+                    
+                    gainNode.gain.setValueAtTime(0.08, webAudioContext.currentTime); // Safe volume
+                    
+                    audioOscillator.connect(gainNode);
+                    gainNode.connect(webAudioContext.destination);
+                    
+                    audioOscillator.start();
+                }
+            } catch(e) {
+                console.error("Erro no Web Audio API:", e);
+            }
+        }
+
+        function stopWebBeep() {
+            if (audioOscillator) {
+                try {
+                    audioOscillator.stop();
+                } catch(e){}
+                audioOscillator = null;
+            }
+        }
+
+        // SVG circle gauge updates
+        function updateSvgCircle(circle, value, max = 1.0) {
+            const radius = circle.r.baseVal.value;
+            const circumference = 2 * Math.PI * radius;
+            circle.style.strokeDasharray = `${circumference} ${circumference}`;
+            
+            const percentage = Math.min(1.0, Math.max(0.0, value / max));
+            const offset = circumference - (percentage * circumference);
+            circle.style.strokeDashoffset = offset;
+        }
+
+        // Update web UI status card and color systems
+        function setUIStatus(status, isDrowsy, isYawn, isDistracted, elapsedDrowsy, elapsedYawn, elapsedDistracted) {
+            statusText.className = 'status-value';
+            emergencyOverlay.style.display = 'none';
+            emergencyOverlay.className = 'emergency-screen-blink';
+
+            if (isDrowsy) {
+                statusText.innerText = 'PERIGO!';
+                statusText.classList.add('status-perigo');
+                statusMessage.innerText = `SONOLÊNCIA GRAVE DETECTADA há ${elapsedDrowsy.toFixed(1)}s! PARE O VEÍCULO IMEDIATAMENTE!`;
+                statusGlow.style.backgroundColor = 'var(--accent-red)';
+                statusGlow.style.opacity = '0.35';
+                
+                emergencyOverlay.classList.add('emergency-screen-blink-red');
+                emergencyOverlay.style.display = 'block';
+                playWebBeep(880); // Severe pitch
+            } else if (isDistracted) {
+                statusText.innerText = 'DISTRAÇÃO!';
+                statusText.classList.add('status-distracao');
+                statusMessage.innerText = `MOTORISTA DISTRAÍDO há ${elapsedDistracted.toFixed(1)}s! OLHE PARA A ESTRADA!`;
+                statusGlow.style.backgroundColor = 'var(--accent-purple)';
+                statusGlow.style.opacity = '0.3';
+                
+                emergencyOverlay.classList.add('emergency-screen-blink-purple');
+                emergencyOverlay.style.display = 'block';
+                playWebBeep(587.33); // Mid-frequency alert beep (D5)
+            } else if (isYawn) {
+                statusText.innerText = 'FADIGA!';
+                statusText.classList.add('status-fadiga');
+                statusMessage.innerText = `Fadiga facial excessiva (bocejo há ${elapsedYawn.toFixed(1)}s). Considere tomar um café ou fazer uma pausa.`;
+                statusGlow.style.backgroundColor = 'var(--accent-orange)';
+                statusGlow.style.opacity = '0.25';
+                
+                stopWebBeep();
+            } else {
+                statusText.innerText = 'ATENTO';
+                statusText.classList.add('status-atento');
+                statusMessage.innerText = 'O motorista demonstra padrão facial estável e olhos abertos. Continue dirigindo com segurança.';
+                statusGlow.style.backgroundColor = 'var(--accent-cyan)';
+                statusGlow.style.opacity = '0.1';
+                
+                stopWebBeep();
+            }
+        }
+
+        // Fetch logs and compile the historic events table
+        async function fetchEvents() {
+            try {
+                const res = await fetch('/api/events');
+                if (!res.ok) return;
+                const events = await res.json();
+                
+                if (events.length === 0) {
+                    eventFeed.innerHTML = '<div class="no-events">Nenhum evento registrado nesta sessão.</div>';
+                    return;
+                }
+
+                // Render events feed in reverse chronological order
+                let html = '';
+                events.slice().reverse().forEach(ev => {
+                    let badgeClass = 'event-badge';
+                    let eventLabel = ev.Event_Type;
+                    let peakLabel = 'Valor';
+                    
+                    if (ev.Event_Type === 'DROWSINESS') {
+                        badgeClass += ' event-drowsy';
+                        eventLabel = 'Sonolência';
+                        peakLabel = 'Min EAR';
+                    } else if (ev.Event_Type === 'YAWN') {
+                        badgeClass += ' event-yawn';
+                        eventLabel = 'Bocejo';
+                        peakLabel = 'Max MAR';
+                    } else if (ev.Event_Type === 'DISTRACTION') {
+                        badgeClass += ' event-distraction';
+                        eventLabel = 'Distração';
+                        peakLabel = 'Max Dev';
+                    }
+
+                    html += `
+                        <div class="event-row">
+                            <span class="event-time">${ev.Timestamp}</span>
+                            <span class="${badgeClass}">${eventLabel}</span>
+                            <span class="event-detail">Duração: <strong>${ev.Duration_Seconds}s</strong></span>
+                            <span class="event-detail">${peakLabel}: <strong>${parseFloat(ev.Peak_Value).toFixed(3)}</strong></span>
+                        </div>
+                    `;
+                });
+                eventFeed.innerHTML = html;
+            } catch (e) {
+                console.error("Erro ao carregar telemetria:", e);
+            }
+        }
+
+        // Main Web Loop: Fetches state at high speed (150ms)
+        async function fetchRealtimeState() {
+            try {
+                const res = await fetch('/api/state');
+                if (!res.ok) return;
+                const state = await res.json();
+
+                // 1. Update text values
+                earValEl.innerText = state.ear.toFixed(3);
+                marValEl.innerText = state.mar.toFixed(3);
+                drowsyCountEl.innerText = state.drowsy_count;
+                yawnCountEl.innerText = state.yawn_count;
+                distractedCountEl.innerText = state.distracted_count;
+
+                // 2. Responsive circle gauge preloads
+                updateSvgCircle(earCircle, state.ear, 0.45);
+                updateSvgCircle(marCircle, state.mar, 1.0);
+
+                // 3. Update Head Pose Tracker SVG
+                const yawThreshold = 0.33;
+                const pitchDownThreshold = 0.12;
+                const pitchUpThreshold = -0.38;
+                
+                let px = 70 - (state.yaw * 58 * 2.0);
+                let py = 70 + (state.pitch * 58 * 2.0);
+                
+                // Keep dot inside tracker circle
+                let dist = Math.sqrt((px - 70)**2 + (py - 70)**2);
+                if (dist > 58) {
+                    let angle = Math.atan2(py - 70, px - 70);
+                    px = 70 + 58 * Math.cos(angle);
+                    py = 70 + 58 * Math.sin(angle);
+                }
+                
+                poseDot.setAttribute('cx', px);
+                poseDot.setAttribute('cy', py);
+                poseValText.innerText = `${state.yaw.toFixed(2)} / ${state.pitch.toFixed(2)}`;
+                
+                let isOutPose = Math.abs(state.yaw) > yawThreshold || state.pitch > pitchDownThreshold || state.pitch < pitchUpThreshold;
+                
+                if (state.is_distracted) {
+                    poseDot.setAttribute('fill', 'var(--accent-red)');
+                    poseDot.style.color = 'var(--accent-red)';
+                } else if (isOutPose) {
+                    poseDot.setAttribute('fill', 'var(--accent-orange)');
+                    poseDot.style.color = 'var(--accent-orange)';
+                } else {
+                    poseDot.setAttribute('fill', 'var(--accent-green)');
+                    poseDot.style.color = 'var(--accent-green)';
+                }
+
+                // 4. Face detection status badge
+                if (state.face_detected) {
+                    faceBadge.className = 'face-status-badge face-detected';
+                    faceBadgeText.innerText = 'ROSTO DETECTADO';
+                } else {
+                    faceBadge.className = 'face-status-badge face-missing';
+                    faceBadgeText.innerText = 'ROSTO NÃO DETECTADO';
+                    stopWebBeep(); // Stop audio beep if face is lost
+                }
+
+                // 5. Update core alarm overlay status
+                setUIStatus(state.status, state.is_drowsy, state.is_yawn, state.is_distracted, state.elapsed_drowsy, state.elapsed_yawn, state.elapsed_distracted);
+
+                // 6. Shift chart values
+                earData.push(state.ear);
+                earData.shift();
+                marData.push(state.mar);
+                marData.shift();
+                realtimeChart.update();
+
+                // 7. Update history logs if counts changed
+                if (state.drowsy_count !== prevDrowsyCount || state.yawn_count !== prevYawnCount || state.distracted_count !== prevDistractedCount) {
+                    prevDrowsyCount = state.drowsy_count;
+                    prevYawnCount = state.yawn_count;
+                    prevDistractedCount = state.distracted_count;
+                    fetchEvents();
+                }
+
+            } catch (e) {
+                console.error("Erro na leitura de tempo real:", e);
+            }
+        }
+
+        // Trigger Audio Context initialization on first click (browser permissions safety)
+        document.body.addEventListener('click', () => {
+            if (!webAudioContext) {
+                webAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        });
+
+        // Initialize loops
+        fetchEvents();
+        setInterval(fetchRealtimeState, 150); // 150ms real-time loop updates
+
+    </script>
+</body>
+</html>
