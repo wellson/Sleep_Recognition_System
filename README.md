@@ -18,27 +18,24 @@
 
 ## 🎯 Visão Geral
 
-Eu crie o  **Sleep Recognition System** para necessidade pessoal quando viajo de carro da sono. Solução completa de segurança viária que monitora continuamente o estado de atenção do motorista via webcam. Utilizando o modelo **MediaPipe Face Landmarker** (468 pontos faciais 3D), o sistema calcula métricas biométricas clínicas em cada frame e dispara alertas multimodais (visual + sonoro) antes que um acidente ocorra.
-
+Criei o **Sleep Recognition System** para necessidade pessoal: viagens longas de carro me dão sono. Solução completa de segurança viária que monitora continuamente o estado de atenção do motorista via webcam. Utilizando o modelo **MediaPipe Face Landmarker** (468 pontos faciais 3D), o sistema calcula métricas biométricas clínicas em cada frame e dispara alertas multimodais (visual + sonoro) antes que um acidente ocorra.
 
 ![Demo](video.gif)
 
-<a href="https://www.youtube.com/watch?v=u56r2gjhIU0" target="_blank">
-  Link do vídeo
-</a>
+[▶️ Assista ao vídeo de demonstração](https://www.youtube.com/watch?v=u56r2gjhIU0)
 
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    PIPELINE DE DETECÇÃO                         │
 │                                                                 │
-│  Webcam  ──▶  MediaPipe  ──▶  EAR / MAR / Yaw / Pitch         │
-│               (468 pts)        ▼         ▼         ▼           │
+│  Webcam  ──▶  MediaPipe  ──▶  EAR / MAR / Yaw / Pitch           │
+│               (468 pts)        ▼         ▼         ▼            │
 │                            Sonolência  Bocejo  Distração        │
-│                                ▼         ▼         ▼           │
+│                                ▼         ▼         ▼            │
 │                            Alarme    Aviso    Alerta + LOG      │
 │                                ▼                                │
-│                         CSV  ──▶  Dashboard Web  ──▶  Report   │
+│                         CSV  ──▶  Dashboard Web  ──▶  Report    │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -139,7 +136,7 @@ flowchart TD
     R --> S{Tecla 'q'\npressionada?}
     S -->|NÃO| E
     S -->|SIM| T[Finalizar eventos ativos\nLiberar câmera]
-    T --> U[python analytics.py]
+    T --> U[python3 analytics.py]
     U --> V([📊 Relatório PNG])
 ```
 
@@ -204,15 +201,15 @@ graph LR
 
 ## 📊 Dashboard Analítico
 
-Ao final de cada sessão, o comando `python analytics.py` gera um relatório visual completo em `drowsiness_report.png`:
+Ao final de cada sessão, o comando `python3 analytics.py` gera um relatório visual completo em `drowsiness_report.png`:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│          DASHBOARD DE ANÁLISE DE FADIGA E DISTRAÇÃO                │
+│          DASHBOARD DE ANÁLISE DE FADIGA E DISTRAÇÃO                 │
 ├───────────────────────────┬─────────────────────────────────────────┤
-│  📊 MÉTRICAS DA SESSÃO    │   Contagem por Tipo de Evento          │
+│  📊 MÉTRICAS DA SESSÃO    │   Contagem por Tipo de Evento           │
 │                           │                                         │
-│  Total Eventos: 10        │   ████ Sonolência  4                   │
+│  Total Eventos: 10        │   ████ Sonolência  4                    │
 │  Sonolências:   4         │   ███  Bocejos     4  ← barras          │
 │  Bocejos:       4         │   ██   Distração   2     coloridas      │
 │  Distrações:    2         │                                         │
@@ -222,18 +219,18 @@ Ao final de cada sessão, o comando `python analytics.py` gera um relatório vis
 │  Linha do Tempo e Duração dos Alertas                               │
 │                                                                     │
 │  4.5s ┤                                               ●  Sonolência │
-│  3.5s ┤               ●                      ●     ●  ◆  Bocejo    │
-│  2.5s ┤ ◆    ◆              ◆                         ▲  Distração │
+│  3.5s ┤               ●                      ●     ●  ◆  Bocejo     │
+│  2.5s ┤ ◆    ◆              ◆                         ▲  Distração  │
 │  1.5s ┤      ▲   ●     ▲                              │             │
-│       └──────────────────────────────────────────────▶ Tempo       │
-│          T+5  T+8  T+10 T+14  T+22  T+25  T+28  T+37 T+42 min     │
+│       └──────────────────────────────────────────────▶ Tempo        │
+│          T+5  T+8  T+10 T+14  T+22  T+25  T+28  T+37 T+42 min       │
 ├─────────────────────────────────────────────────────────────────────┤
-│  Progressão de Severidade ao Longo da Sessão                       │
+│  Progressão de Severidade ao Longo da Sessão                        │
 │                                                                     │
 │  4.5s ┤                              ╔══════════════════════════    │
-│  3.0s ┤           ╔═════════════════╝  ← pico acumulado            │
-│  1.5s ┤ ╔═════════╝  ▌  ▌  ▌  ▌  ▌  ▌  ▌  ← eventos individuais   │
-│       └──────────────────────────────────────────────▶ Tempo       │
+│  3.0s ┤           ╔═════════════════╝  ← pico acumulado             │
+│  1.5s ┤ ╔═════════╝  ▌  ▌  ▌  ▌  ▌  ▌  ▌  ← eventos individuais     │
+│       └──────────────────────────────────────────────▶ Tempo        │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -252,17 +249,17 @@ Ao final de cada sessão, o comando `python analytics.py` gera um relatório vis
 ```
 ┌─────────────────────────────────────────────────────────┐ ← Frame OpenCV
 │ EAR (Olhos)  0.31  [██████████░░░│░░░░░]                │
-│ MAR (Boca)   0.18  [████░░░░░░░░░│░░░░░]  DASHBOARD    │
-│                                           Sonolências: 2 │
+│ MAR (Boca)   0.18  [████░░░░░░░░░│░░░░░] DASHBOARD      │
+│                                          Sonolências: 2 │
 │  TRACKER     ╔═══════╗    YAW: +0.12     Bocejos:    1  │
 │  CABEÇA      ║   ●   ║    PIT: +0.04     Distrações: 0  │
-│              ╚═══════╝                   Status: ATENTO  │
-│                                                          │
+│              ╚═══════╝                   Status: ATENTO │
+│                                                         │
 │          [ FEED DA CÂMERA EM TEMPO REAL ]               │
-│                                                          │
-│                                                          │
-├══════════════════════════════════════════════════════════╡ ← Alerta
-│ 🔴 ALERTA DE SONOLÊNCIA! FAÇA UMA PAUSA!         2.3s  │
+│                                                         │
+│                                                         │
+├═════════════════════════════════════════════════════════╡ ← Alerta
+│ 🔴 ALERTA DE SONOLÊNCIA! FAÇA UMA PAUSA!         2.3s   │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -305,10 +302,10 @@ pygame.mixer disponível? ──SIM──▶ Pygame (multi-canal simultâneo)
 ├─────────────────┬────────────────────────────────────────┤
 │ Visão Computac. │ OpenCV 4.x + MediaPipe Face Landmarker │
 │ Análise Facial  │ 468 pontos 3D · EAR · MAR · Head Pose  │
-│ Backend Web     │ Flask (thread daemon) · REST JSON API   │
-│ Análise de Dados│ Pandas · Matplotlib (dark theme 300dpi) │
-│ Áudio           │ Pygame Mixer · afplay (macOS fallback)  │
-│ Logging         │ CSV estruturado com timestamp ISO 8601  │
+│ Backend Web     │ Flask (thread daemon) · REST JSON API  │
+│ Análise de Dados│ Pandas · Matplotlib (dark theme 300dpi)│
+│ Áudio           │ Pygame Mixer · afplay (macOS fallback) │
+│ Logging         │ CSV estruturado com timestamp ISO 8601 │
 └─────────────────┴────────────────────────────────────────┘
 ```
 
@@ -332,14 +329,14 @@ pip install -r requirements.txt
 ### 2. Gerar arquivos de áudio
 
 ```bash
-python generate_audio.py
+python3 generate_audio.py
 # Cria: assets/alarm.wav · assets/yawn_warning.wav · assets/distraction_warning.wav
 ```
 
 ### 3. Iniciar o monitoramento
 
 ```bash
-python drowsiness_detector.py
+python3 drowsiness_detector.py
 ```
 
 - Dashboard Web em tempo real: **http://localhost:55800**
@@ -348,7 +345,7 @@ python drowsiness_detector.py
 ### 4. Gerar relatório analítico
 
 ```bash
-python analytics.py
+python3 analytics.py
 # Exporta: drowsiness_report.png (300 DPI, dark theme)
 ```
 
@@ -382,10 +379,6 @@ Sleep_Recognition_System/
 ---
 
 ## 📋 Estrutura do Log CSV
-
-```
-drowsiness_events.csv
-```
 
 | Timestamp | Event_Type | Duration_Seconds | Peak_Value |
 |:---|:---:|:---:|:---:|
