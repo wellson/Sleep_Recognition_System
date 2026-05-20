@@ -24,6 +24,8 @@ Eu crie o  **Sleep Recognition System** para necessidade pessoal quando viajo de
   <img src="https://img.youtube.com/vi/u56r2gjhIU0/0.jpg" alt="Assista ao vídeo" width="700" height="600" style="object-fit: cover;" />
 </a>
 
+<video src="video.mp4" width="700" height="600" style="object-fit: cover;" autoplay loop muted playsinline></video>
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    PIPELINE DE DETECÇÃO                         │
