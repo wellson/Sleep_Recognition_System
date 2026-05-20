@@ -118,7 +118,7 @@ flowchart TD
     M2 -->|SIM| M3[🟠 AVISO BOCEJO\nTom duplo\n480Hz/640Hz]
     M2 -->|NÃO| M4[Iniciar/continuar\ntimer]
 
-    K --> N{|Yaw| > 0.33\nou Pitch fora?}
+    K --> N{"|Yaw| > 0.33\nou Pitch fora?"}
     N -->|NÃO| N1[Reset timer\ndistração]
     N -->|SIM| N2{Timer ≥ 1.5s?}
     N2 -->|SIM| N3[🟣 ALERTA DISTRAÇÃO\nPulso rápido\n650Hz/850Hz]
